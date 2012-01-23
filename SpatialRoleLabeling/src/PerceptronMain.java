@@ -39,10 +39,11 @@ public class PerceptronMain {
         
         try {
             //TODO: It misses the Corpus and the FeatureExtractor attributes...
-            PerceptronClassifier p = new PerceptronClassifier(null, new DotProductKernel(), null, "SI", numIterations);
+            PerceptronClassifier p = new PerceptronClassifier(null, null, null, null, numIterations, null, null);
+//            PerceptronClassifier p = new PerceptronClassifier(null, null, new DotProductKernel(), null, "SI", numIterations);
             //TODO: Classifying instances
             p.classify(null);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(PerceptronMain.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
