@@ -15,7 +15,7 @@ lp = parser.lexparser.LexicalizedParser("/Users/alberto/LLAVERO/Universidad/PLN-
 
 # Peen TreeBank language pack 
 tlp = trees.PennTreebankLanguagePack()
-lp.setOptionFlags(["-maxLength", "80", "-retainTmpSubcategories", "-outputFormat", "wordsAndTags,penn,typedDependencies", "-outputFormatOptions", "xml", "-writeOutputFiles"])
+lp.setOptionFlags(["-maxLength", "80", "-retainTmpSubcategories", "-outputFormat", "wordsAndTags,penn,typedDependenciesCollapsed", "-outputFormatOptions", "xml", "-writeOutputFiles"])
 
 #lp.setOptionFlags(["-maxLength", "80", "-retainTmpSubcategories", "-outputFormat", "wordsAndTags,penn,typedDependencies" "-outputFormatOptions", "basicDependencies"])
 
@@ -34,8 +34,8 @@ for content in contents:
     # Get tree and dependencies                                                             
     gsf = tlp.grammaticalStructureFactory() #PennTreeBanck factory                          
     gs = gsf.newGrammaticalStructure(parse) #PennTreeBank from parsed sentence               
-#    tdl = gs.typedDependenciesCollapsed() #syntantic dependencies (TypeDependency list) 
-    tdl = gs.typedDependencies()
+    tdl = gs.typedDependenciesCollapsed() #syntantic dependencies (TypeDependency list) 
+#    tdl = gs.typedDependencies()
     # Add tree into the xml
     tree = parse.toString()
     treenode = doc.createElement('TREE')
@@ -63,8 +63,7 @@ for content in contents:
         deprelnode.appendChild(depreltext)
         depsnode.appendChild(deprelnode)
     content.parentNode.appendChild(depsnode)
-    
-    
+        
     f = open('parsedtest.xml', 'w')
     doc.writexml(f)
     f.close()
