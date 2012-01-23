@@ -102,19 +102,24 @@ public class PerceptronMain {
             LexicalizedParser lp = new LexicalizedParser("grammar/englishPCFG.ser.gz");
             MaxentTagger tagger = new MaxentTagger("left3words-wsj-0-18.tagger");
             ArrayList<String> sentences = new ArrayList<String>();
+            ArrayList<ArrayList<String>> prepositions = new ArrayList<ArrayList<String>>();
 
             DOMParser parser = new DOMParser();
             parser.parse(file);
             Document doc = (Document) parser.getDocument();
             NodeList adnotatedSentences = doc.getElementsByTagName("SENTENCE");
             for(int i = 0; i < adnotatedSentences.getLength(); i++){
+                ArrayList<String> sentencePrep = new ArrayList<String>();
                 Node adnotatedSentence = adnotatedSentences.item(i);
                 NodeList children = adnotatedSentence.getChildNodes();
                 for(int j = 0; j < children.getLength(); j++){
                     Node section = children.item(j);
                     if(section.getNodeName().equals("CONTENT"))
                         sentences.add(section.getFirstChild().getNodeValue());
+                    if(section.getNodeName().equals("SPATIAL_INDICATOR"))
+                        sentencePrep.add(section.getFirstChild().getNodeValue());
                 }
+                prepositions.add(sentencePrep);
             }
             for (int i = 0; i < sentences.size(); i++) {
                 String sentence = sentences.get(i);
@@ -128,6 +133,7 @@ public class PerceptronMain {
                 GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
                 GrammaticalStructure gs = gsf.newGrammaticalStructure(sentenceTree);
                 List<TypedDependency> tdl = gs.typedDependenciesCCprocessed();
+                ArrayList<String> sentencePrep = prepositions.get(i);
                 
                 for (int t=0; t<tSentence.size(); t++) {
                     Map<String, Object> wordFeatures = new HashMap<String, Object>();
@@ -153,8 +159,12 @@ public class PerceptronMain {
                     //TODO: Missing extract "The path in the parse tree from the w to the s"
                     //PUT HERE THE VALUE: wordFeatures.put("WORD_PATH", path);
                     
-                    //TODO: Missing extract "The binary linear position of w with respect to the s (e.g., before or not)."
-                    //PUT HERE THE VALUE: wordFeatures.put("WORD_BINARY", binary);
+
+                    //Binary - LEFT of prep: TRUE, RIGHT of prep: FALSE
+                    for (int p=0; p<sentencePrep.size(); p++) {
+                        boolean binary = (sentence.indexOf(sentencePrep.get(p)) - sentence.indexOf(word) > 0);
+                        wordFeatures.put("WORD_BINARY", binary);
+                    }
                     
                     words.add(wordFeatures);
                     //System.out.println(wordFeatures);
