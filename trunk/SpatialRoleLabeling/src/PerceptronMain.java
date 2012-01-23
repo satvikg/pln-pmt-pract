@@ -29,7 +29,7 @@ import org.xml.sax.SAXException;
  *
  * @author Matias
  */
-public class Main {
+public class PerceptronMain {
    
     private static int numIterations = 100;
     
@@ -39,14 +39,19 @@ public class Main {
         try {
             FeatureExtractor("SItrain.xml");
         } catch (SAXException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PerceptronMain.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PerceptronMain.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(data);
-        
-        //TODO: It misses the Corpus and the FeatureExtractor attributes...
-        PerceptronClassifier p = new PerceptronClassifier(null, , new DotProductKernel(), , "SI", numIterations);
+        try {
+            //TODO: It misses the Corpus and the FeatureExtractor attributes...
+            PerceptronClassifier p = new PerceptronClassifier(null, new DotProductKernel(), null, "SI", numIterations);
+            //TODO: Classifying instances
+            p.classify(null);
+        } catch (IOException ex) {
+            Logger.getLogger(PerceptronMain.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     public static void FeatureExtractor(String file) throws SAXException, IOException{
