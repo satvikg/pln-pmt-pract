@@ -48,9 +48,9 @@ public class PerceptronMain {
             ArrayList<Map<String, Object>> features = WordsFeatureExtractor("SItrain.xml");
             System.out.println(features);
             //TODO: It misses the Corpus and the FeatureExtractor attributes...
-            PerceptronClassifier p = new PerceptronClassifier(null, null, new DotProductKernel(), null, "SI", numIterations);
+            //PerceptronClassifier p = new PerceptronClassifier(null, null, new DotProductKernel(), null, "SI", numIterations);
             //TODO: Classifying instances
-            p.classify(null);
+            //p.classify(null);
         } catch (SAXException ex) {
             
         } catch (IOException ex) {
@@ -96,6 +96,7 @@ public class PerceptronMain {
     public static ArrayList<Map<String, Object>> WordsFeatureExtractor(String file) throws SAXException, IOException{
         
         ArrayList<Map<String, Object>> words = new ArrayList<Map<String, Object>>();
+        ArrayList<String> sentenceDep = new ArrayList<String>();
 
         try {
             LexicalizedParser lp = new LexicalizedParser("grammar/englishPCFG.ser.gz");
@@ -134,16 +135,19 @@ public class PerceptronMain {
                     wordFeatures.put("WORD", word);
                     wordFeatures.put("WORD_POS", tSentence.get(t).tag());
                     boolean found = false;
+                    //System.out.println(tdl);
                     for(int typed=0; typed<tdl.size(); typed++) {
                         TypedDependency tdlword = tdl.get(typed);
                         String gov = tdlword.gov().toString().substring(0, tdlword.gov().toString().indexOf("-", 0));
+                        //System.out.println(gov + " : " + word);
                         if(gov.equals(word)) {
                             wordFeatures.put("WORD_DEP", tdlword.reln().toString());
+                            //System.out.println(tdlword + " " + word + " " + gov + " " + tdlword.reln());
                             found = true;
                         }
                     }    
                     if(!found) {
-                        wordFeatures.put("WORD_DEP", "");
+                        wordFeatures.put("WORD_DEP", "other");
                     }
 
                     //TODO: Missing extract "The path in the parse tree from the w to the s"
@@ -153,7 +157,7 @@ public class PerceptronMain {
                     //PUT HERE THE VALUE: wordFeatures.put("WORD_BINARY", binary);
                     
                     words.add(wordFeatures);
-
+                    //System.out.println(wordFeatures);
                 } 
             } 
         } catch (Exception ex) {
