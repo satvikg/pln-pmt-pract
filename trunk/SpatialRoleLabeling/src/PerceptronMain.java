@@ -42,6 +42,7 @@ public class PerceptronMain {
     */
     
     private static int numIterations = 100;
+    private static boolean TRACE = false;
     
     public static void main(String args[]){
         try {
@@ -122,52 +123,55 @@ public class PerceptronMain {
                 prepositions.add(sentencePrep);
             }
             for (int i = 0; i < sentences.size(); i++) {
-                String sentence = sentences.get(i);
-                List<List<HasWord>> tagSentences = MaxentTagger.tokenizeText(new StringReader(sentence));
-                ArrayList<TaggedWord> tSentence = tagger.tagSentence(tagSentences.get(0));
                 
-                //Obtains the tree
-                Tree sentenceTree = lp.apply(sentence); 
-                //Obtains typed dependency
-                TreebankLanguagePack tlp = new PennTreebankLanguagePack();
-                GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
-                GrammaticalStructure gs = gsf.newGrammaticalStructure(sentenceTree);
-                List<TypedDependency> tdl = gs.typedDependenciesCCprocessed();
                 ArrayList<String> sentencePrep = prepositions.get(i);
-                
-                for (int t=0; t<tSentence.size(); t++) {
-                    Map<String, Object> wordFeatures = new HashMap<String, Object>();
-                    String word = tSentence.get(t).word();
-                    wordFeatures.put("WORD", word);
-                    wordFeatures.put("WORD_POS", tSentence.get(t).tag());
-                    boolean found = false;
-                    //System.out.println(tdl);
-                    for(int typed=0; typed<tdl.size(); typed++) {
-                        TypedDependency tdlword = tdl.get(typed);
-                        String gov = tdlword.gov().toString().substring(0, tdlword.gov().toString().indexOf("-", 0));
-                        //System.out.println(gov + " : " + word);
-                        if(gov.equals(word)) {
-                            wordFeatures.put("WORD_DEP", tdlword.reln().toString());
-                            //System.out.println(tdlword + " " + word + " " + gov + " " + tdlword.reln());
-                            found = true;
+
+                for (int p=0; p<sentencePrep.size(); p++) {
+                    String sentence = sentences.get(i);
+                    List<List<HasWord>> tagSentences = MaxentTagger.tokenizeText(new StringReader(sentence));
+                    ArrayList<TaggedWord> tSentence = tagger.tagSentence(tagSentences.get(0));
+
+                    //Obtains the tree
+                    Tree sentenceTree = lp.apply(sentence); 
+                    //Obtains typed dependency
+                    TreebankLanguagePack tlp = new PennTreebankLanguagePack();
+                    GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
+                    GrammaticalStructure gs = gsf.newGrammaticalStructure(sentenceTree);
+                    List<TypedDependency> tdl = gs.typedDependenciesCCprocessed();
+
+                    for (int t=0; t<tSentence.size(); t++) {
+                        Map<String, Object> wordFeatures = new HashMap<String, Object>();
+                        String word = tSentence.get(t).word();
+
+                        wordFeatures.put("WORD", word);
+                        wordFeatures.put("WORD_POS", tSentence.get(t).tag());
+                        boolean found = false;
+                        //System.out.println(tdl);
+                        for(int typed=0; typed<tdl.size(); typed++) {
+                            TypedDependency tdlword = tdl.get(typed);
+                            String gov = tdlword.gov().toString().substring(0, tdlword.gov().toString().indexOf("-", 0));
+                            //System.out.println(gov + " : " + word);
+                            if(gov.equals(word)) {
+                                wordFeatures.put("WORD_DEP", tdlword.reln().toString());
+                                //System.out.println(tdlword + " " + word + " " + gov + " " + tdlword.reln());
+                                found = true;
+                            }
+                        }    
+                        if(!found) {
+                            wordFeatures.put("WORD_DEP", "other");
                         }
-                    }    
-                    if(!found) {
-                        wordFeatures.put("WORD_DEP", "other");
-                    }
 
-                    //TODO: Missing extract "The path in the parse tree from the w to the s"
-                    //PUT HERE THE VALUE: wordFeatures.put("WORD_PATH", path);
-                    
+                        //TODO: Missing extract "The path in the parse tree from the w to the s"
+                        //PUT HERE THE VALUE: wordFeatures.put("WORD_PATH", path);
 
-                    //Binary - LEFT of prep: TRUE, RIGHT of prep: FALSE
-                    for (int p=0; p<sentencePrep.size(); p++) {
+                        //Binary - LEFT of prep: TRUE, RIGHT of prep: FALSE
                         boolean binary = (sentence.indexOf(sentencePrep.get(p)) - sentence.indexOf(word) > 0);
+                        wordFeatures.put("PREP", sentencePrep.get(p));
                         wordFeatures.put("WORD_BINARY", binary);
+                        
+                        words.add(wordFeatures);
+                        if(TRACE) System.out.println(wordFeatures);
                     }
-                    
-                    words.add(wordFeatures);
-                    //System.out.println(wordFeatures);
                 } 
             } 
         } catch (Exception ex) {
