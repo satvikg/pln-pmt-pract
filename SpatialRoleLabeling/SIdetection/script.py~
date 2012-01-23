@@ -1,0 +1,127 @@
+import nltk
+import xml.dom.minidom
+from nltk.tokenize import RegexpTokenizer
+from nltk.tree import *
+import cPickle
+from subprocess import call
+
+from tokenize import *
+from postagger import *
+from prepositionfeatures import *
+
+from pprint import pprint
+
+
+#Tokenize dataset
+
+print "Tokenizing dataset"
+tokenize_dataset()
+
+print "POStag dataset"
+POStag_dataset()
+
+print "Parse dataset"
+call(["./parser.py"])
+
+print "Extract preposition features"
+prepfeatures_dataset()
+
+
+# Read xml file
+#doc = xml.dom.minidom.parse("sprl_semeval3_trial0.xml")
+#doc = xml.dom.minidom.parse("tokenized.xml") 
+doc = xml.doc.minidom.parse("parsed.xml")
+contents = doc.getElementsByTagName("CONTENT")
+
+total = len(contents)
+done = 0
+for entry in contents:
+    print "*******************************************"
+    print "PROGRESS:......................." + str(done) + "/" + str(total)
+    print "*******************************************"
+    done +=1
+
+    # sentence = contents[0].childNodes[0].data #first instance
+    sentence = entry.childNodes[0].data
+    print "\n***Original sentence (tokenized):\n", sentence
+
+    #cPickle.dump(sentence.split(' '), open('tokens.p', 'wb'))
+
+    # POS tag
+    taggedwords = postag(words)
+    
+
+    print "\n***POStagged sentence:\n", taggedwords
+
+    # Standford Parse
+    call(["./parser.py"]) 
+    f = open('tree.p', 'r')
+    stringtree = f.readline()
+    f.close()
+    f = file ('dependencies.p', 'r')
+    dependencies = cPickle.load(f)
+    print "\n***Parsed sentence:\n", stringtree
+
+    # Prepositions extraction
+    prepdependencies = preposition_deps(dependencies)
+    print "\n****Founded prepositions and their HEAD1 HEAD2 from Stanford Parser:\n", 
+    pprint(prepdependencies)
+
+    preps = doc.createElement("PREPS")
+    for prepdep in prepdependencies:
+        features = extract_features(prepdep, taggedwords, stringtree) 
+        print "Features extracted:"
+        pprint(features)
+
+        # Introduce preps and features in the xml
+        head1 = doc.createElement('HEAD1')
+        head1_LEMMA = doc.createElement('HEAD1_LEMMA')
+        head1_POS = doc.createElement('HEAD1_POS')
+        head2 = doc.createElement('HEAD2')
+        head2_LEMMA =  doc.createElement('HEAD_LEMMA')
+        head2_POS =  doc.createElement('HEAD2_POS')
+        prep = doc.createElement('PREP')
+        prep_POS = doc.createElement('PREP_POS')
+        prep_spatial = doc.createElement('PREP_SPATIAL')
+
+        head1_text = doc.createTextNode(features['head1'])
+        head1_LEMMA_text = doc.createTextNode(features['head1_LEMMA'])
+        head1_POS_text = doc.createTextNode(features['head1_POS'])
+        head2_text = doc.createTextNode(features['head2'])
+        head2_LEMMA_text = doc.createTextNode(features['head2_LEMMA'])
+        head2_POS_text = doc.createTextNode(features['head2_POS'])
+        prep_text = doc.createTextNode(str(features['preposition'])) #str to avoid Nones
+        prep_POS_text = doc.createTextNode(str(features['preposition_POS']))
+        prep_spatial_text = doc.createTextNode(str(features['preposition_spatial']))
+
+        head1.appendChild(head1_text)
+        head1_LEMMA.appendChild(head1_LEMMA_text)
+        head1_POS.appendChild(head1_POS_text)
+        head2.appendChild(head2_text)
+        head2_LEMMA.appendChild(head2_LEMMA_text)
+        head2_POS.appendChild(head2_POS_text)
+        prep.appendChild(prep_text)
+        prep_spatial.appendChild(prep_spatial_text)
+
+        prepnode = doc.createElement("PREPOSITION")
+
+        prepnode.appendChild(head1)
+        prepnode.appendChild(head1_LEMMA)
+        prepnode.appendChild(head1_POS)
+        prepnode.appendChild(head2)
+        prepnode.appendChild(head2_LEMMA)
+        prepnode.appendChild(head2_POS)
+        prepnode.appendChild(prep)
+        prepnode.appendChild(prep_POS)
+        prepnode.appendChild(prep_spatial)
+
+        preps.appendChild(prepnode)
+
+    entry.parentNode.appendChild(preps)
+
+    # Add prep features into current xml entry
+    f = open('outputtest.xml', 'w')
+    doc.writexml(f)
+    f.close()
+    
+
