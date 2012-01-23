@@ -1,17 +1,9 @@
 import com.aliasi.classify.PerceptronClassifier;
-import com.aliasi.corpus.Corpus;
 import com.aliasi.matrix.DotProductKernel;
-import com.aliasi.matrix.KernelFunction;
-import com.aliasi.features.*;
-import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.ling.TaggedWord;
-import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
-import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-import edu.stanford.nlp.trees.*;
-import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.xerces.parsers.DOMParser;
@@ -44,6 +36,7 @@ public class PerceptronMain {
             Logger.getLogger(PerceptronMain.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(data);
+        
         try {
             //TODO: It misses the Corpus and the FeatureExtractor attributes...
             PerceptronClassifier p = new PerceptronClassifier(null, new DotProductKernel(), null, "SI", numIterations);
