@@ -1,5 +1,3 @@
-import com.aliasi.classify.PerceptronClassifier;
-import com.aliasi.matrix.DotProductKernel;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.TaggedWord;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
@@ -47,11 +45,12 @@ public class PerceptronMain {
     public static void main(String args[]){
         try {
             ArrayList<Map<String, Object>> features = WordsFeatureExtractor("SItrain.xml");
+            ArrayList<Map<String, Float>> numFeatures = numerizeFeatures(features);
             System.out.println(features);
-            //TODO: It misses the Corpus and the FeatureExtractor attributes...
-            //PerceptronClassifier p = new PerceptronClassifier(null, null, new DotProductKernel(), null, "SI", numIterations);
-            //TODO: Classifying instances
-            //p.classify(null);
+            System.out.println(numFeatures);
+
+            //TODO: Here PERCEPTRON
+            
         } catch (SAXException ex) {
             
         } catch (IOException ex) {
@@ -97,7 +96,6 @@ public class PerceptronMain {
     public static ArrayList<Map<String, Object>> WordsFeatureExtractor(String file) throws SAXException, IOException{
         
         ArrayList<Map<String, Object>> words = new ArrayList<Map<String, Object>>();
-        ArrayList<String> sentenceDep = new ArrayList<String>();
 
         try {
             LexicalizedParser lp = new LexicalizedParser("grammar/englishPCFG.ser.gz");
@@ -122,6 +120,9 @@ public class PerceptronMain {
                 }
                 prepositions.add(sentencePrep);
             }
+
+            //USE THIS TO TEST MOAR FASTER
+            //for (int i = 0; i < 10; i++) {
             for (int i = 0; i < sentences.size(); i++) {
                 
                 ArrayList<String> sentencePrep = prepositions.get(i);
@@ -179,5 +180,18 @@ public class PerceptronMain {
         }
         return words;
     }
-    
+
+    //Converts all the features in numbers
+    private static ArrayList<Map<String, Float>> numerizeFeatures(ArrayList<Map<String, Object>> features) {
+        ArrayList<Map<String, Float>> numbers = new ArrayList<Map<String, Float>>();
+        for (int i = 0; i < features.size(); i++) {
+            Map<String, Object> wordFeature = features.get(i);
+            Map<String, Float> numberFeature = new HashMap<String, Float>();
+            for (Map.Entry<String, Object> entry : wordFeature.entrySet()) {
+                numberFeature.put(entry.getKey(),(float)wordFeature.get(entry.getKey()).toString().hashCode());
+            }
+            numbers.add(numberFeature);
+        }
+        return numbers;
+    }   
 }
