@@ -126,7 +126,8 @@ public class PerceptronMain {
             for (int i = 0; i < sentences.size(); i++) {
                 
                 ArrayList<String> sentencePrep = prepositions.get(i);
-
+                Tree[] prepTrees = new Tree[sentencePrep.size()];
+                    
                 for (int p=0; p<sentencePrep.size(); p++) {
                     String sentence = sentences.get(i);
                     List<List<HasWord>> tagSentences = MaxentTagger.tokenizeText(new StringReader(sentence));
@@ -139,6 +140,21 @@ public class PerceptronMain {
                     GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
                     GrammaticalStructure gs = gsf.newGrammaticalStructure(sentenceTree);
                     List<TypedDependency> tdl = gs.typedDependenciesCCprocessed();
+                    
+//                    System.out.println(sentenceTree.toStringBuilder(new StringBuilder("")));
+                    List<Tree> allNodes = PerceptronMain.getAllNodes(
+                            sentenceTree);
+                    //sentenceTree.getChildrenAsList();
+//                    System.out.println(allNodes.size());
+                    prepTrees[p] = null; 
+                    
+                    for(Tree child : allNodes) {
+//                        System.out.println(child.label().value());
+                        if(child.label() != null && 
+                                (child.label().value() + " ").equals(sentencePrep.get(p))) {
+                            prepTrees[p] = child;
+                        }
+                    }
 
                     for (int t=0; t<tSentence.size(); t++) {
                         Map<String, Object> wordFeatures = new HashMap<String, Object>();
@@ -164,6 +180,45 @@ public class PerceptronMain {
 
                         //TODO: Missing extract "The path in the parse tree from the w to the s"
                         //PUT HERE THE VALUE: wordFeatures.put("WORD_PATH", path);
+                        
+                        Tree wordTree = null;
+
+                        for(Tree child : allNodes) {
+    //                        System.out.println(child.label().value());
+                            if(child.label() != null && child.label().value().equals(word)) {
+                                wordTree = child;
+                            }
+                        }
+
+//                        System.out.println("!!! " + sentencePrep.get(p));
+                        if(wordTree != null && prepTrees[p] != null) {
+                            List<Tree> path = sentenceTree.pathNodeToNode(wordTree, prepTrees[p]);
+
+//                            System.out.print("Path " + word + " - " +
+//                                    sentencePrep.get(p) + ": ");
+
+                            int counter = 0;
+                            String pathString = "";
+                            for(Tree el : path) {
+                                if(counter > 0 && counter < path.size()-1) {
+                                    String pos = PerceptronMain.getValueFromLabel(
+                                            el.label().toString(), "ValueAnnotation=", "]");
+                                    pathString+= pos;
+                                    if(counter < path.size()-2) {
+                                        pathString += "-";
+                                    }
+                                }
+                                counter++;
+                            }
+//                            System.out.println(pathString);
+                            wordFeatures.put("WORD_PATH", pathString);
+                        }
+                        else {
+//                            System.err.println("Null wordtree for word " + 
+//                                word + " or prep " + sentencePrep.get(p) + "!");
+                        }
+                    
+                    
 
                         //Binary - LEFT of prep: TRUE, RIGHT of prep: FALSE
                         boolean binary = (sentence.indexOf(sentencePrep.get(p)) - sentence.indexOf(word) > 0);
@@ -194,4 +249,39 @@ public class PerceptronMain {
         }
         return numbers;
     }   
+    
+    public static List<Tree> getAllNodes(Tree t) {
+    if (t.isLeaf()) {
+          List<Tree> children = new ArrayList<Tree>();
+//          if (t.label() != null) {
+              children.add(t);
+//          }
+          return children;
+    } 
+    else {
+          Tree[] kids = t.children();
+//          System.out.println(t.label() + " " + kids.length);
+          List<Tree> children = new ArrayList<Tree>();
+
+          if (kids != null) {
+            for (Tree kid : kids) {
+              children.addAll(PerceptronMain.getAllNodes(kid));
+            }
+          }
+          return children;
+          
+        }
+  }
+    
+    public static String getValueFromLabel(String label, String left, String right) {
+        int indexLeft = label.indexOf(left) + left.length();
+        int indexRight = label.indexOf(right);
+//        System.out.print("(" + indexLeft + ", " + indexRight + ")");
+        
+        if(indexRight - indexLeft > 10)
+            return " ";
+        return label.substring(indexLeft, indexRight);
+    }
+
+    
 }
