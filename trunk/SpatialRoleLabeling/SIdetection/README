@@ -1,3 +1,9 @@
-1. tokenize.py
-2. postagger.py
-3. parse.py (jython)
+How to follow the full process:
+
+1. python tokenize.py
+2. python postagger.py
+3. jython parse.py (install jython before)
+4. python prepositionfeatures.py (extract preposition features)
+5. python SImarker.py (extract preposition class (SI or NSI))
+
+Every step reads the input from an xml and writes the output on a new xml to be read by the following step
