@@ -50,6 +50,57 @@ public class PerceptronMain {
             System.out.println(numFeatures);
 
             //TODO: Here PERCEPTRON
+            AveragedPerceptron avgPerceptron = new AveragedPerceptron();
+            
+            //TODO: MODIF
+            double featureSentences[][][] = {
+            {{1,2,1},{1,1,3},{1,2,2},{1,1,1},{1,2,3},{3,2,3},{1,1,3}},
+            {{2,2,1},{3,1,3},{1,2,2},{1,2,1}},
+            {{1,2,1},{3,2,3},{1,2,2},{1,2,3},{1,1,1}},
+            {{1,1,1},{3,2,1},{1,1,2},{1,2,1},{1,1,1}},
+            {{2,2,2},{3,3,3},{3,2,3},{1,2,1},{3,1,1},{1,3,1},{1,2,3},{1,3,2},{1,2,1},{1,2,1}},
+            {{3,2,3},{3,2,3},{1,1,2},{1,2,1}}
+            };
+            double taggedSentences[][] = {
+                {0,0,0,1,0,-1,0},
+                {0,1,0,-1},
+                {-1,0,0,1,0},
+                {1,0,0,-1,0},
+                {1,0,0,-1,0,0,0,0,0,1},
+                {0,-1,0,1}
+            };
+            
+            int seqSize = 3;
+            
+            //For all the instances ("sentences")
+            for(int s = 0; s < numFeatures.size(); s++) {
+                
+                ArrayList featureVectors = new ArrayList(numFeatures.get(s).values());
+                ArrayList tagVectors = new ArrayList(numFeatures.get(s).keySet());
+                for(int i = 0; i < featureVectors.size(); i++){
+                    double[][] featureSentence = featureSentences[i];
+                    double[] taggedSentence = taggedSentences[i];
+                    for(int j = 0; j <= featureSentence.length-seqSize; j++){
+                        double[][] featureChunk = new double[seqSize][];
+                        double[] taggedChunk = new double[seqSize];
+                        System.arraycopy(featureSentence, j, featureChunk, 0, seqSize);
+                        System.arraycopy(taggedSentence, j, taggedChunk, 0, seqSize);
+                        //System.out.print(mts(featureChunk)+" ");
+                        //System.out.print(ats(taggedChunk)+" ");
+                        System.out.println();
+                        featureVectors.add(featureChunk);
+                        tagVectors.add(taggedChunk);
+
+                    }
+                }
+                avgPerceptron.train(featureVectors, tagVectors, 10000);
+                for(int i = 0; i < 20; i++ ){
+                    //System.out.println("["+ats(avgPerceptron.classify((double[][])featureVectors.get(i))));
+                    //System.out.println(ats((double[])tagVectors.get(i))+"]");
+                }
+                //System.out.println(ats(avgPerceptron.classify((double[][])featureVectors.get(0))));
+                //System.out.println(ats(avgPerceptron.classify((double[][])featureVectors.get(1))));
+            }
             
         } catch (SAXException ex) {
             
