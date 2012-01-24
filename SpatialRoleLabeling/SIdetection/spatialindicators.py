@@ -2,7 +2,7 @@ import xml.dom.minidom
 import nltk
 from pprint import pprint
 from random import shuffle
-
+from sklearn import svm
 def generate_dataset():
     doc = xml.dom.minidom.parse("SItrain.xml")
     preps = doc.getElementsByTagName("PREPOSITION")
@@ -44,16 +44,49 @@ def cvtrain(train, K):
 
     shuffle(train)
     total_accuracy = 0
-    
+
     for k in xrange(K):
         training = [x for i, x in enumerate(train) if i % K != k]
         validation = [x for i, x in enumerate(train) if i % K == k]
         classifier = nltk.NaiveBayesClassifier.train(training)
         accuracy =  nltk.classify.accuracy(classifier, validation)
-        total_accuracy += accuracy 
-        
+        total_accuracy += accuracy
+
     avg_accuracy = float(total_accuracy)/K
-    print "CV Accuracy: " + str(avg_accuracy)
+    print "Naive Bayes accuracy on CV: " + str(avg_accuracy)
+
+
+def cvtrain_svm(train, K):
+    
+    shuffle(train)
+    total_accuracy = 0
+
+    for k in xrange(K):
+        # Prepare samples
+        training = [x for i, x in enumerate(train) if i % K != k]
+        validation = [x for i, x in enumerate(train) if i % K == k]
+        tr_features = [x[0] for x in training]
+        tr_tags = [x[1] for x in training]
+        te_features = [x[0] for x in validation]
+        te_tags = [x[1] for x in validation]
+        
+        # Create model
+        clf = svm.SVC()
+        clf.fit(tr_features, tr_tags)
+
+        # Get accuracy
+        accuracy = 0 
+        for i in range(len(validation)):
+            pred = clf.predict(te_features[i])
+            if pred == te_tags[i]:
+                accuracy +=1 
+            
+        accuracy = accuracy*100.0/len(validation)
+        total_accuracy += accuracy
+
+    avg_accuracy = float(total_accuracy)/K
+    print "SVM Accuracy on CV: " + str(avg_accuracy)    
+    return avg_accuracy
 
 def test():
     pass
@@ -80,3 +113,5 @@ if __name__ == "__main__":
         print x[0]
         print "predicted:", pred
         print "gold:", gold
+
+    cv_accuracy = cvtrain_svm(train, 5)
